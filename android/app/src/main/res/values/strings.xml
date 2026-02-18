@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Topsell Asset</string>
+    <string name="title_activity_main">Topsell Asset</string>
+    <string name="package_name">com.topsell.asset</string>
+    <string name="custom_url_scheme">com.topsell.asset</string>
+</resources>
