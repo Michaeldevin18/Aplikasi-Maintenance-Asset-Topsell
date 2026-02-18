@@ -135,7 +135,7 @@ export default function ScanAsset() {
     if (!selectedOutletId || !selectedDivisionId) return;
     const pair = `${selectedOutletId}:${selectedDivisionId}`;
     if (pair !== selectedPair) setSelectedPair(pair);
-  }, [mode, selectedDivisionId, selectedOutletId]);
+  }, [mode, selectedDivisionId, selectedOutletId, selectedPair]);
 
   const resolvedManualOutlet = useMemo(() => {
     const q = safeLower(manualOutlet);
@@ -194,6 +194,47 @@ export default function ScanAsset() {
     });
   }, [manualDivision, manualOutlet, mode, verification.division, verification.outlet]);
 
+  const handleDetected = async (result: { codeResult: { code: string } }) => {
+    if (processing) return;
+    const code = result.codeResult.code;
+    console.log("Barcode detected:", code);
+    
+    setProcessing(true);
+    Quagga.stop(); // Stop scanning while processing
+
+    try {
+      // Find asset by code
+      const { data } = await supabase
+        .from('assets')
+        .select('id')
+        .eq('code', code)
+        .single();
+
+      if (data) {
+        navigate(`/asset/${data.id}`, {
+          state: {
+            verificationId: verification.id,
+            outlet: verification.outlet,
+            division: verification.division,
+          },
+        });
+      } else {
+        setError(`Asset with code "${code}" not found.`);
+        setProcessing(false);
+        // Restart scanning after a delay if needed, or let user retry manually
+      }
+    } catch (err) {
+      console.error("Error searching asset:", err);
+      setError("Error searching for asset.");
+      setProcessing(false);
+    }
+  };
+
+  const handleDetectedRef = useRef(handleDetected);
+  useEffect(() => {
+    handleDetectedRef.current = handleDetected;
+  });
+
   useEffect(() => {
     if (!scannerRef.current) return;
 
@@ -250,50 +291,19 @@ export default function ScanAsset() {
       }
     })();
 
-    Quagga.onDetected(handleDetected);
+    const onDetected = (res: { codeResult: { code: string } }) => {
+        if (handleDetectedRef.current) {
+            handleDetectedRef.current(res);
+        }
+    };
+    Quagga.onDetected(onDetected);
 
     return () => {
       stopped = true;
-      Quagga.offDetected(handleDetected);
+      Quagga.offDetected(onDetected);
       Quagga.stop();
     };
   }, []);
-
-  const handleDetected = async (result: { codeResult: { code: string } }) => {
-    if (processing) return;
-    const code = result.codeResult.code;
-    console.log("Barcode detected:", code);
-    
-    setProcessing(true);
-    Quagga.stop(); // Stop scanning while processing
-
-    try {
-      // Find asset by code
-      const { data } = await supabase
-        .from('assets')
-        .select('id')
-        .eq('code', code)
-        .single();
-
-      if (data) {
-        navigate(`/asset/${data.id}`, {
-          state: {
-            verificationId: verification.id,
-            outlet: verification.outlet,
-            division: verification.division,
-          },
-        });
-      } else {
-        setError(`Asset with code "${code}" not found.`);
-        setProcessing(false);
-        // Restart scanning after a delay if needed, or let user retry manually
-      }
-    } catch (err) {
-      console.error("Error searching asset:", err);
-      setError("Error searching for asset.");
-      setProcessing(false);
-    }
-  };
 
   const handleRetry = () => {
     setError(null);

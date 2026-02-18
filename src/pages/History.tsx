@@ -12,39 +12,39 @@ export default function History() {
   });
 
   useEffect(() => {
+    const fetchRecords = async () => {
+      setLoading(true);
+      try {
+        let query = supabase
+          .from('maintenance_records')
+          .select(`
+            *,
+            asset:assets(name, code),
+            technician:users(name)
+          `)
+          .order('maintenance_date', { ascending: false });
+
+        if (filter.type !== 'all') {
+          query = query.eq('maintenance_type', filter.type);
+        }
+
+        if (filter.status !== 'all') {
+          query = query.eq('status', filter.status);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        setRecords(data || []);
+      } catch (error) {
+        console.error('Error fetching history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchRecords();
   }, [filter]);
-
-  const fetchRecords = async () => {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('maintenance_records')
-        .select(`
-          *,
-          asset:assets(name, code),
-          technician:users(name)
-        `)
-        .order('maintenance_date', { ascending: false });
-
-      if (filter.type !== 'all') {
-        query = query.eq('maintenance_type', filter.type);
-      }
-
-      if (filter.status !== 'all') {
-        query = query.eq('status', filter.status);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setRecords(data || []);
-    } catch (error) {
-      console.error('Error fetching history:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
