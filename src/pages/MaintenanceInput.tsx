@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuthStore } from '@/store/authStore';
-import { ArrowLeft, Camera, Upload, X } from 'lucide-react';
+import { ArrowLeft, Camera, X } from 'lucide-react';
 import { takePhotoFile } from '@/lib/camera';
 
 export default function MaintenanceInput() {
@@ -59,8 +59,9 @@ export default function MaintenanceInput() {
       const file = await takePhotoFile();
       setPhotos((prev) => [...prev, file]);
       setPhotoPreviews((prev) => [...prev, URL.createObjectURL(file)]);
-    } catch (error: any) {
-      alert(error?.message || 'Gagal membuka kamera');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Gagal membuka kamera';
+      alert(msg);
     } finally {
       setTakingPhoto(false);
     }
@@ -115,9 +116,10 @@ export default function MaintenanceInput() {
       }
 
       navigate(`/asset/${assetId}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error submitting maintenance:', error);
-      alert('Error submitting maintenance: ' + error.message);
+      alert('Error submitting maintenance: ' + msg);
     } finally {
       setLoading(false);
     }

@@ -3,7 +3,7 @@ import { Router, Request, Response } from 'express';
 const router = Router();
 
 // Mock database of TAMS assets
-const mockTamsAssets: Record<string, any> = {
+const mockTamsAssets: Record<string, unknown> = {
   'A-2024-001': {
     code: 'A-2024-001',
     name: 'Industrial Generator X500',

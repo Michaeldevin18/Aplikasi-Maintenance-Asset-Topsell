@@ -34,7 +34,6 @@ async function manageUser() {
   console.log(`\nProcessing user: ${email}...`);
 
   let userId;
-  let isNewUser = false;
 
   // 1. Try to create the user
   const { data: createData, error: createError } = await supabase.auth.admin.createUser({
@@ -88,7 +87,6 @@ async function manageUser() {
   } else {
     console.log('User created and verified successfully!');
     userId = createData.user.id;
-    isNewUser = true;
   }
 
   // 2. Ensure profile exists in public.users

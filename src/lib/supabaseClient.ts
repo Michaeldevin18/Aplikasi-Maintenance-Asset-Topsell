@@ -15,7 +15,7 @@ async function nativeFetch(input: RequestInfo | URL, init?: RequestInit): Promis
   const headers = new Headers(init?.headers || undefined);
   const contentType = headers.get('Content-Type') || headers.get('content-type') || '';
 
-  let data: any = undefined;
+  let data: unknown = undefined;
   if (init?.body != null) {
     if (typeof init.body === 'string') {
       if (contentType.includes('application/json')) {
@@ -28,7 +28,7 @@ async function nativeFetch(input: RequestInfo | URL, init?: RequestInit): Promis
         data = init.body;
       }
     } else {
-      data = init.body as any;
+      data = init.body as unknown;
     }
   }
 
@@ -62,11 +62,11 @@ function isBinaryBody(body: unknown): boolean {
   if (typeof FormData !== 'undefined' && body instanceof FormData) return true;
   if (typeof Blob !== 'undefined' && body instanceof Blob) return true;
   if (typeof ArrayBuffer !== 'undefined' && body instanceof ArrayBuffer) return true;
-  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(body as any)) return true;
+  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(body as ArrayBufferView)) return true;
   return false;
 }
 
-const fetchImpl: typeof fetch = (input: any, init?: any) => {
+const fetchImpl: typeof fetch = (input: RequestInfo | URL, init?: RequestInit) => {
   if (Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
     if (!isBinaryBody(init?.body)) {
       return nativeFetch(input, init);

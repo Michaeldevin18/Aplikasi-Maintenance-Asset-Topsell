@@ -12,7 +12,7 @@ export async function appFetch(input: RequestInfo | URL, init?: RequestInit): Pr
   const headers = new Headers(init?.headers || undefined);
   const contentType = headers.get('Content-Type') || headers.get('content-type') || '';
 
-  let data: any = undefined;
+  let data: unknown = undefined;
   if (init?.body != null) {
     if (typeof init.body === 'string') {
       if (contentType.includes('application/json')) {
@@ -25,7 +25,7 @@ export async function appFetch(input: RequestInfo | URL, init?: RequestInit): Pr
         data = init.body;
       }
     } else {
-      data = init.body as any;
+      data = init.body as unknown;
     }
   }
 
@@ -53,4 +53,3 @@ export async function appFetch(input: RequestInfo | URL, init?: RequestInit): Pr
     headers: resHeaders,
   });
 }
-

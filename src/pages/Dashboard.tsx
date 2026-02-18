@@ -74,7 +74,14 @@ export default function Dashboard() {
       });
 
       if (activityData) {
-        setRecentActivity(activityData.map((item: any) => ({
+        const rows = activityData as Array<{
+          id: string;
+          maintenance_type: string;
+          status: string;
+          created_at: string;
+          assets?: { code?: string } | null;
+        }>;
+        setRecentActivity(rows.map((item) => ({
           id: item.id,
           asset_code: item.assets?.code || 'Unknown Asset',
           maintenance_type: item.maintenance_type,

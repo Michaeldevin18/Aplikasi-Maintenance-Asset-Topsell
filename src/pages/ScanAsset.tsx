@@ -10,6 +10,14 @@ import divisionsRaw from '../../data_devisi.md?raw';
 type Outlet = { id: string; kode: string; nama: string };
 type Division = { id: string; nama: string };
 
+type StoredContext = {
+  mode: 'select' | 'manual';
+  outletId?: string;
+  divisionId?: string;
+  outletKode?: string;
+  outletNama?: string;
+  divisionNama?: string;
+};
 function parseTsv(raw: string): string[][] {
   return raw
     .split(/\r?\n/)
@@ -52,14 +60,7 @@ function buildVerificationId(outlet: Outlet | null, division: Division | null) {
 
 const STORAGE_KEY = 'topsell_verification_context_v1';
 
-function loadStoredContext(): {
-  mode: 'select' | 'manual';
-  outletId?: string;
-  divisionId?: string;
-  outletKode?: string;
-  outletNama?: string;
-  divisionNama?: string;
-} | null {
+function loadStoredContext(): StoredContext | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -71,7 +72,7 @@ function loadStoredContext(): {
   }
 }
 
-function saveStoredContext(ctx: any) {
+function saveStoredContext(ctx: StoredContext) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(ctx));
   } catch {
@@ -83,7 +84,6 @@ export default function ScanAsset() {
   const navigate = useNavigate();
   const scannerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
 
   const outlets = useMemo(() => loadOutlets(), []);
@@ -206,7 +206,7 @@ export default function ScanAsset() {
             inputStream: {
               name: 'Live',
               type: 'LiveStream',
-              target: scannerRef.current as any,
+              target: scannerRef.current as HTMLElement,
               constraints: facingMode ? { facingMode } : undefined,
             },
             decoder: {
@@ -244,8 +244,7 @@ export default function ScanAsset() {
 
         if (stopped) return;
         Quagga.start();
-        setScanning(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to init Quagga:', err);
         setError('Gagal mengaktifkan kamera. Pastikan izin kamera sudah diberikan.');
       }
@@ -260,7 +259,7 @@ export default function ScanAsset() {
     };
   }, []);
 
-  const handleDetected = async (result: any) => {
+  const handleDetected = async (result: { codeResult: { code: string } }) => {
     if (processing) return;
     const code = result.codeResult.code;
     console.log("Barcode detected:", code);
@@ -270,7 +269,7 @@ export default function ScanAsset() {
 
     try {
       // Find asset by code
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('assets')
         .select('id')
         .eq('code', code)

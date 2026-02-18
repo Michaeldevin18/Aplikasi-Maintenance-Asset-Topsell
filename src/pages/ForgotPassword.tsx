@@ -26,8 +26,8 @@ export default function ForgotPassword() {
       if (error) throw error;
 
       setSuccess(true);
-    } catch (err: any) {
-      let errorMessage = err.message || 'An error occurred while requesting password reset';
+    } catch (err: unknown) {
+      let errorMessage = err instanceof Error ? err.message : 'An error occurred while requesting password reset';
       
       // Handle rate limit error specifically
       if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {

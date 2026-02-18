@@ -59,12 +59,11 @@ export default function Login() {
         setSession(data.session);
         navigate('/dashboard');
       }
-    } catch (err: any) {
-      // Improved error message handling
-      let errorMessage = err.message;
-      if (err.message === 'Invalid login credentials') {
+    } catch (err: unknown) {
+      let errorMessage = err instanceof Error ? err.message : '';
+      if (errorMessage === 'Invalid login credentials') {
         errorMessage = 'Invalid email or password. Please try again.';
-      } else if (err.message.includes('Email not confirmed')) {
+      } else if (typeof errorMessage === 'string' && errorMessage.includes('Email not confirmed')) {
         errorMessage = 'Please confirm your email address before logging in.';
       }
       setError(errorMessage || 'An error occurred during login');

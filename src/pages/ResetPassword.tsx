@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Lock, AlertCircle, CheckCircle } from 'lucide-react';
@@ -42,8 +42,8 @@ export default function ResetPassword() {
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-    } catch (err: any) {
-      setError(err.message || 'Error updating password');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error updating password');
     } finally {
       setLoading(false);
     }

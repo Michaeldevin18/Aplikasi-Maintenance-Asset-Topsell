@@ -103,7 +103,7 @@ export default function History() {
           </div>
         ) : (
           <ul className="divide-y divide-gray-50">
-            {records.map((record: any) => (
+            {records.map((record) => (
               <li key={record.id} className="group hover:bg-gray-50 transition-colors duration-200">
                 <div className="px-6 py-5">
                   <div className="flex items-center justify-between mb-2">

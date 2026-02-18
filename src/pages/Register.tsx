@@ -85,8 +85,8 @@ export default function Register() {
       // 3. Navigate to dashboard
       navigate('/dashboard');
 
-    } catch (err: any) {
-      let errorMessage = err.message || 'An error occurred during registration';
+    } catch (err: unknown) {
+      let errorMessage = err instanceof Error ? err.message : 'An error occurred during registration';
       
       // Handle rate limit error specifically
       if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {

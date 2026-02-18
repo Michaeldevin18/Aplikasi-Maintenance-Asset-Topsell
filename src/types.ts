@@ -16,7 +16,7 @@ export interface Asset {
   location: string;
   status: 'active' | 'inactive' | 'maintenance' | 'disposed';
   purchase_date: string | null;
-  specification: Record<string, any> | null;
+  specification: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,7 +32,8 @@ export interface MaintenanceRecord {
   status: 'pending' | 'in_progress' | 'completed';
   created_at: string;
   updated_at: string;
-  technician?: User; // Joined field
+  technician?: User;
+  asset?: { name?: string; code?: string };
 }
 
 export interface AssetPhoto {
