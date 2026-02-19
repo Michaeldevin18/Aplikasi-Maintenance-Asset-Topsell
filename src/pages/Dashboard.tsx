@@ -207,20 +207,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-
-        {/* Quick Tips or Info */}
-        <div className="bg-gradient-to-br from-gray-900 to-black shadow-lg rounded-2xl p-6 text-white relative overflow-hidden">
-           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
-           
-           <h3 className="text-lg font-bold mb-4 relative z-10">Pro Tip</h3>
-           <p className="text-gray-300 text-sm mb-6 relative z-10 leading-relaxed">
-             Regular preventive maintenance extends asset lifespan by up to 40%. Schedule your inspections early!
-           </p>
-           
-           <button className="w-full py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg text-sm font-medium transition-colors border border-white/10">
-             View Schedule
-           </button>
-        </div>
       </div>
     </div>
   );

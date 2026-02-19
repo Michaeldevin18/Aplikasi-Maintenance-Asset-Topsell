@@ -87,7 +87,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
           username: email.split('@')[0],
           email: email,
           name: name || email.split('@')[0],
-          role: 'teknisi', // Default role
+          role: req.body.role || 'teknisi',
           password_hash: 'managed-by-supabase-auth', // Placeholder
         },
       ]);

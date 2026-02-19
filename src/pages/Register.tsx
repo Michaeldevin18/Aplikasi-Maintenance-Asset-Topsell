@@ -12,12 +12,13 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'teknisi',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -56,6 +57,7 @@ export default function Register() {
           email: formData.email,
           password: formData.password,
           name: formData.name,
+          role: formData.role,
         }),
       });
 
@@ -194,6 +196,21 @@ export default function Register() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />
+            </div>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <User className="h-5 w-5 text-gray-400 group-focus-within:text-brand-red transition-colors" />
+              </div>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-brand-red focus:border-brand-red focus:z-10 sm:text-sm transition-all bg-white"
+              >
+                <option value="teknisi">Teknisi</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
           </div>
 

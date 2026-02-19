@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Quagga from 'quagga';
 import { supabase } from '@/lib/supabaseClient';
-import { AlertCircle, Loader } from 'lucide-react';
+import { AlertCircle, Loader, Search, ChevronDown, Check } from 'lucide-react';
 import { ensureCameraPermission } from '@/lib/camera';
 import outletsRaw from '../../data_outlet.md?raw';
 import divisionsRaw from '../../data_devisi.md?raw';
@@ -101,6 +101,11 @@ export default function ScanAsset() {
 
   const [manualOutlet, setManualOutlet] = useState(stored?.outletKode || stored?.outletNama || '');
   const [manualDivision, setManualDivision] = useState(stored?.divisionNama || '');
+  
+  // Search states for dropdown
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedOutlet = useMemo(
     () => outlets.find((o) => o.id === selectedOutletId) || null,
@@ -112,23 +117,53 @@ export default function ScanAsset() {
   );
 
   const verificationOptions = useMemo(() => {
-    const opts: Array<{ value: string; label: string }> = [];
+    const opts: Array<{ value: string; label: string; outlet: Outlet; division: Division }> = [];
     for (const outlet of outlets) {
       for (const division of divisions) {
         const value = `${outlet.id}:${division.id}`;
         const label = `ID ${outlet.id} ${division.id} ${outlet.kode}_${outlet.nama}_${division.nama}`;
-        opts.push({ value, label });
+        opts.push({ value, label, outlet, division });
       }
     }
     return opts;
   }, [divisions, outlets]);
+
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery) return verificationOptions;
+    const lowerQuery = searchQuery.toLowerCase();
+    return verificationOptions.filter((opt) => 
+      opt.label.toLowerCase().includes(lowerQuery) ||
+      opt.outlet.nama.toLowerCase().includes(lowerQuery) ||
+      opt.outlet.kode.toLowerCase().includes(lowerQuery) ||
+      opt.division.nama.toLowerCase().includes(lowerQuery)
+    );
+  }, [searchQuery, verificationOptions]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   useEffect(() => {
     if (!selectedPair) return;
     const [outletId, divisionId] = selectedPair.split(':');
     if (outletId) setSelectedOutletId(outletId);
     if (divisionId) setSelectedDivisionId(divisionId);
-  }, [selectedPair]);
+    
+    // Update search query to match selected item label if not editing
+    const option = verificationOptions.find(o => o.value === selectedPair);
+    if (option && !isDropdownOpen) {
+      setSearchQuery(option.label);
+    }
+  }, [selectedPair, verificationOptions, isDropdownOpen]);
 
   useEffect(() => {
     if (mode !== 'select') return;
@@ -236,6 +271,13 @@ export default function ScanAsset() {
   });
 
   useEffect(() => {
+    if (mode === 'manual') {
+      if (scannerRef.current) {
+        Quagga.stop();
+      }
+      return;
+    }
+
     if (!scannerRef.current) return;
 
     let stopped = false;
@@ -303,7 +345,7 @@ export default function ScanAsset() {
       Quagga.offDetected(onDetected);
       Quagga.stop();
     };
-  }, []);
+  }, [mode]);
 
   const handleRetry = () => {
     setError(null);
@@ -348,20 +390,59 @@ export default function ScanAsset() {
 
         {mode === 'select' ? (
           <div className="space-y-2">
-            <div>
+            <div className="relative" ref={dropdownRef}>
               <label className="block text-xs font-medium text-gray-700 mb-1">Pilih ID Verifikasi</label>
-              <select
-                value={selectedPair}
-                onChange={(e) => setSelectedPair(e.target.value)}
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-gray-50"
-              >
-                <option value="">Pilih outlet & divisi...</option>
-                {verificationOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setIsDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  placeholder="Cari outlet, kode, atau divisi..."
+                  className="w-full border border-gray-200 rounded-md pl-9 pr-8 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+
+              {isDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {filteredOptions.length > 0 ? (
+                    filteredOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          setSelectedPair(opt.value);
+                          setSearchQuery(opt.label);
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center justify-between group transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{opt.outlet.nama}</p>
+                          <p className="text-xs text-gray-500">
+                            {opt.outlet.kode} • {opt.division.nama}
+                          </p>
+                        </div>
+                        {selectedPair === opt.value && (
+                          <Check className="h-4 w-4 text-brand-red" />
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-center text-sm text-gray-500">
+                      Tidak ditemukan hasil untuk "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -411,7 +492,12 @@ export default function ScanAsset() {
       </div>
 
       <div className="relative w-full max-w-md aspect-square bg-black rounded-lg overflow-hidden shadow-xl">
-        {error ? (
+        {mode === 'manual' ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 p-4 text-center">
+            <p className="text-gray-500 font-medium">Kamera dinonaktifkan di mode manual.</p>
+            <p className="text-gray-400 text-sm mt-2">Silakan input data aset secara manual jika diperlukan, atau kembali ke mode scan untuk menggunakan kamera.</p>
+          </div>
+        ) : error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 p-4 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
             <p className="text-red-700 font-medium">{error}</p>
